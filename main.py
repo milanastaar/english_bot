@@ -22,8 +22,9 @@ def handler_start(message):
 def handler_learn(message):
     bot.send_message(message.chat.id, "давай скорее начнём обучение")
     user_dict = user.get(str(message.chat.id), {})
-    learn = random.choice(list(user_dict.keys()))
-    bot.send_message(message.chat.id, f"введите перевод слова {learn} ")
+
+    ask_translation(message.chat.id, user[str(message.chat.id)], int(message.text.split()[1]))
+
 
 
 @bot.message_handler(commands=["help"])
@@ -70,15 +71,27 @@ def handler_all(message):
                          "хорошо")
 
 
-def ask_translation(id, words, left):
+def ask_translation(chat_id, words, left):
     if left > 0:
         learn = random.choice(list(words.keys()))
-        bot.send_message(id, f"введите перевод слова {learn} ")
+        bot.send_message(chat_id, f"введите перевод слова {learn} ")
         translation = words[learn]
-        bot.register_next_step_handler_by_chat_id(id,check_translation, left-1, translation)
 
-def check_translation(message,translation,left):
-    ...
+        bot.register_next_step_handler_by_chat_id(chat_id,check_translation, left-1, translation)
+    else:
+        bot.send_message(chat_id,"спасибо за урок ")
+
+
+def check_translation(message, left, exspected_translation):
+    user_translation = message.text.strip().lower()
+    if user_translation == exspected_translation.lower():
+        bot.send_message(message.chat.id,"правильно молодец")
+    else:
+        bot.send_message(message.chat.id, f"неправильно:правильный перевод:{exspected_translation}")
+    ask_translation(message.chat.id,user[str(message.chat.id)],left)
+
+
+
 
 if __name__ == "__main__":
     bot.polling(none_stop=True)
